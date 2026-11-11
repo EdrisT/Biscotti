@@ -106,6 +106,10 @@ public final class SettingsViewModel {
 
     /// Whether AI analysis (summary + speaker inference) is enabled (persisted).
     public private(set) var aiAnalysisEnabled: Bool = true
+    public private(set) var llmProviderRaw: String = "local"
+    public private(set) var openAIBaseURL: String = "http://127.0.0.1:8000/v1"
+    public private(set) var openAIModel: String = ""
+    public private(set) var openAIAPIKey: String = ""
 
     // MARK: - Custom Vocabulary
 
@@ -440,6 +444,10 @@ public final class SettingsViewModel {
             stopRecordingAutomatically = settings.stopRecordingAutomatically
             mcpServerEnabled = settings.mcpServerEnabled
             aiAnalysisEnabled = settings.aiAnalysisEnabled
+            llmProviderRaw = settings.llmProviderRaw
+            openAIBaseURL = settings.openAIBaseURL
+            openAIModel = settings.openAIModel
+            openAIAPIKey = settings.openAIAPIKey
             customVocabularyEnabled = settings.customVocabularyResolved
             calendarVocabularyEnabled = settings.calendarVocabularyEnabled
             vocabularyTerms = settings.customVocabulary
@@ -493,13 +501,20 @@ public extension SettingsViewModel {
         core.updateChecker.status
     }
 
-    /// Whether any AI model is available (active model exists).
+    /// Whether the configured AI provider can run analysis.
     var modelAvailable: Bool {
-        core.modelManager.isModelAvailable
+        if llmProviderRaw == "openAICompatible" {
+            return URL(string: openAIBaseURL) != nil
+                && !openAIModel.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        }
+        return core.modelManager.isModelAvailable
     }
 
     /// Display name of the currently active model, or `nil` if none.
     var activeModelDisplayName: String? {
+        if llmProviderRaw == "openAICompatible" {
+            return openAIModel.isEmpty ? nil : "OpenAI-compatible: \(openAIModel)"
+        }
         guard let id = core.modelManager.activeModelID else { return nil }
         return LLMModelCatalog.model(id: id)?.displayName
     }
@@ -538,6 +553,34 @@ public extension SettingsViewModel {
 // MARK: - Notification settings actions
 
 public extension SettingsViewModel {
+    func setLLMProvider(_ provider: String) async {
+        llmProviderRaw = provider
+        try? await core.store.updateSettings { settings in
+            settings.llmProviderRaw = provider
+        }
+    }
+
+    func setOpenAIBaseURL(_ value: String) async {
+        openAIBaseURL = value
+        try? await core.store.updateSettings { settings in
+            settings.openAIBaseURL = value
+        }
+    }
+
+    func setOpenAIModel(_ value: String) async {
+        openAIModel = value
+        try? await core.store.updateSettings { settings in
+            settings.openAIModel = value
+        }
+    }
+
+    func setOpenAIAPIKey(_ value: String) async {
+        openAIAPIKey = value
+        try? await core.store.updateSettings { settings in
+            settings.openAIAPIKey = value
+        }
+    }
+
     /// Toggles the "monitor for meetings" setting. Persists to the store
     /// and posts `.monitorForMeetingsDidChange` so AppCore refreshes its
     /// cached flag.
