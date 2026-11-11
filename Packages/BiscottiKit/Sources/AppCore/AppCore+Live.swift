@@ -115,11 +115,29 @@ public extension AppCore {
                     ? IntelligencePrompts.defaultSummaryPrompt : raw
                 return AISettings(
                     enabled: saved?.aiAnalysisEnabled ?? true,
-                    summaryPrompt: effective
+                    summaryPrompt: effective,
+                    provider: Self.aiProviderSettings(from: saved)
                 )
             }
         )
         return (modelManager, intelligence)
+    }
+
+    private static func aiProviderSettings(
+        from settings: AppSettingsData?
+    ) -> AISettings.AIProviderSettings {
+        guard let settings,
+              settings.llmProviderRaw == "openAICompatible"
+        else {
+            return .local
+        }
+        let baseURL = URL(string: settings.openAIBaseURL)
+            ?? URL(string: "http://127.0.0.1:8000/v1")!
+        return .openAICompatible(
+            baseURL: baseURL,
+            model: settings.openAIModel,
+            apiKey: settings.openAIAPIKey.isEmpty ? nil : settings.openAIAPIKey
+        )
     }
 
     /// Builds the live `TranscriptionService` with XPC engine and vocabulary.

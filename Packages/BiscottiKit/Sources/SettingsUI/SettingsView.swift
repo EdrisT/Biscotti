@@ -49,7 +49,7 @@ public struct SettingsView: View {
     ]
 
     /// Muted caption trailing the AI Enhancements header.
-    static let aiEnhancementsHeaderCaption = "AI runs locally on your Mac."
+    static let aiEnhancementsHeaderCaption = "Built-in or local endpoint."
 
     /// Muted caption trailing the Custom Vocabulary header, marking the
     /// feature as in beta. Same treatment as `aiEnhancementsHeaderCaption`.
@@ -275,6 +275,11 @@ private extension SettingsView {
 
             summaryPromptRow
 
+            aiProviderRow
+            if viewModel.llmProviderRaw == "openAICompatible" {
+                openAIProviderSettings
+            }
+
             aiLanguageModelRow
         } header: {
             HStack {
@@ -304,6 +309,56 @@ private extension SettingsView {
                     summaryPromptModel = nil
                 }
             )
+        }
+    }
+
+    var aiProviderRow: some View {
+        Picker(
+            "AI Provider",
+            selection: Binding(
+                get: { viewModel.llmProviderRaw },
+                set: { value in
+                    Task { await viewModel.setLLMProvider(value) }
+                }
+            )
+        ) {
+            Text("Built-in local model").tag("local")
+            Text("OpenAI-compatible endpoint").tag("openAICompatible")
+        }
+    }
+
+    var openAIProviderSettings: some View {
+        VStack(alignment: .leading, spacing: Tokens.spacingXS) {
+            TextField(
+                "Endpoint",
+                text: Binding(
+                    get: { viewModel.openAIBaseURL },
+                    set: { value in
+                        Task { await viewModel.setOpenAIBaseURL(value) }
+                    }
+                )
+            )
+            TextField(
+                "Model",
+                text: Binding(
+                    get: { viewModel.openAIModel },
+                    set: { value in
+                        Task { await viewModel.setOpenAIModel(value) }
+                    }
+                )
+            )
+            SecureField(
+                "API key (optional)",
+                text: Binding(
+                    get: { viewModel.openAIAPIKey },
+                    set: { value in
+                        Task { await viewModel.setOpenAIAPIKey(value) }
+                    }
+                )
+            )
+            Text("For omlx, use its local OpenAI-compatible base URL, such as http://127.0.0.1:8000/v1.")
+                .font(Tokens.metadataFont)
+                .foregroundStyle(Tokens.secondaryText)
         }
     }
 
@@ -353,17 +408,25 @@ private extension SettingsView {
                 Text(displayName)
                     .font(Tokens.metadataFont)
                     .foregroundStyle(Tokens.secondaryText)
-                Button("Manage") {
-                    showManageModels = true
+                if viewModel.llmProviderRaw == "local" {
+                    Button("Manage") {
+                        showManageModels = true
+                    }
+                    .buttonStyle(.bordered)
+                    .controlSize(.small)
                 }
-                .buttonStyle(.bordered)
-                .controlSize(.small)
             } else {
-                Button("Download\u{2026}") {
-                    showManageModels = true
+                if viewModel.llmProviderRaw == "local" {
+                    Button("Download\u{2026}") {
+                        showManageModels = true
+                    }
+                    .buttonStyle(.bordered)
+                    .controlSize(.small)
+                } else {
+                    Text("Configure above")
+                        .font(Tokens.metadataFont)
+                        .foregroundStyle(Tokens.secondaryText)
                 }
-                .buttonStyle(.bordered)
-                .controlSize(.small)
             }
         }
     }

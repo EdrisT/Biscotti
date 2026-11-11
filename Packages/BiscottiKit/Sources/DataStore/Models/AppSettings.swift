@@ -56,6 +56,18 @@ import SwiftData
     /// built-in default" (so the shipped default can evolve for non-customizers).
     public var summaryPrompt: String = ""
 
+    /// Selected AI provider: `local` or `openAICompatible`.
+    public var llmProviderRaw: String = "local"
+
+    /// Base URL for an OpenAI-compatible server, normally ending in `/v1`.
+    public var openAIBaseURL: String = "http://127.0.0.1:8000/v1"
+
+    /// Model identifier sent to the OpenAI-compatible server.
+    public var openAIModel: String = ""
+
+    /// Optional bearer token for an OpenAI-compatible server.
+    public var openAIAPIKey: String = ""
+
     /// Master switch for custom vocabulary. When false no prompt is sent at all.
     ///
     /// `nil` means the user has never touched the toggle, so the shipped
@@ -110,6 +122,10 @@ import SwiftData
         aiAnalysisEnabled: Bool = true,
         selectedModelID: String = "",
         summaryPrompt: String = "",
+        llmProviderRaw: String = "local",
+        openAIBaseURL: String = "http://127.0.0.1:8000/v1",
+        openAIModel: String = "",
+        openAIAPIKey: String = "",
         customVocabularyEnabled: Bool? = nil,
         calendarVocabularyEnabled: Bool = true,
         mcpServerEnabled: Bool = false
@@ -129,6 +145,10 @@ import SwiftData
         self.aiAnalysisEnabled = aiAnalysisEnabled
         self.selectedModelID = selectedModelID
         self.summaryPrompt = summaryPrompt
+        self.llmProviderRaw = llmProviderRaw
+        self.openAIBaseURL = openAIBaseURL
+        self.openAIModel = openAIModel
+        self.openAIAPIKey = openAIAPIKey
         self.customVocabularyEnabled = customVocabularyEnabled
         self.calendarVocabularyEnabled = calendarVocabularyEnabled
         self.mcpServerEnabled = mcpServerEnabled

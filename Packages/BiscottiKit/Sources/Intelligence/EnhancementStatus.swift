@@ -31,12 +31,20 @@ public struct AISettings: Sendable {
     /// Resolved summary prompt: empty → `defaultSummaryPrompt` at the
     /// call site that builds `AISettings`.
     public var summaryPrompt: String
+    public var provider: AIProviderSettings
+
+    public enum AIProviderSettings: Sendable, Equatable {
+        case local
+        case openAICompatible(baseURL: URL, model: String, apiKey: String?)
+    }
 
     public init(
         enabled: Bool,
-        summaryPrompt: String = IntelligencePrompts.defaultSummaryPrompt
+        summaryPrompt: String = IntelligencePrompts.defaultSummaryPrompt,
+        provider: AIProviderSettings = .local
     ) {
         self.enabled = enabled
         self.summaryPrompt = summaryPrompt
+        self.provider = provider
     }
 }

@@ -96,7 +96,7 @@ public final class Intelligence {
             return
         }
 
-        guard let modelURL = modelManager.activeModelURL() else {
+        guard let provider = providerConfiguration(for: settings) else {
             jobs.removeValue(forKey: meetingID)
             return
         }
@@ -106,7 +106,7 @@ public final class Intelligence {
                 meetingID: meetingID,
                 detail: detail, transcript: transcript,
                 doSummary: !detail.editedSummary,
-                modelURL: modelURL,
+                provider: provider,
                 summaryInstructions: settings.summaryPrompt,
                 markSummaryEdited: false
             )
@@ -171,7 +171,11 @@ public final class Intelligence {
             return
         }
 
-        guard let modelURL = modelManager.activeModelURL() else { return }
+        let settings = await (settingsProvider())
+        guard let provider = providerConfiguration(for: settings) else {
+            jobs.removeValue(forKey: meetingID)
+            return
+        }
 
         // Resolve the effective summary instruction
         let effective: String = if let override = summaryPromptOverride {
@@ -185,7 +189,7 @@ public final class Intelligence {
                 meetingID: meetingID,
                 detail: detail, transcript: transcript,
                 doSummary: doSummary,
-                modelURL: modelURL,
+                provider: provider,
                 summaryInstructions: effective,
                 markSummaryEdited: markResultEdited
             )
@@ -207,7 +211,7 @@ public final class Intelligence {
         detail: MeetingDetailData,
         transcript: TranscriptData,
         doSummary: Bool,
-        modelURL: URL,
+        provider: LLMProviderConfiguration,
         summaryInstructions: String = IntelligencePrompts.defaultSummaryPrompt,
         markSummaryEdited: Bool = false
     ) async throws {
@@ -238,7 +242,7 @@ public final class Intelligence {
             summaryInstructions: summaryInstructions
         )
 
-        try await llm.withSession(model: modelURL, config: .modelOnly) { session in
+        try await llm.withSession(provider: provider) { session in
             let contextSize = try await ContextSizing.contextSizeForAnalysis(
                 firstUser: firstUser,
                 system: IntelligencePrompts.analysisSystem,
@@ -265,6 +269,20 @@ public final class Intelligence {
                 onPartialSummary: { self.streamingSummary[meetingID] = $0 }
             )
             try await MeetingAnalyzer.run(session, ctx)
+        }
+    }
+
+    private func providerConfiguration(
+        for settings: AISettings
+    ) -> LLMProviderConfiguration? {
+        switch settings.provider {
+        case .local:
+            guard let model = modelManager.activeModelURL() else { return nil }
+            return .local(model: model)
+        case let .openAICompatible(baseURL, model, apiKey):
+            guard !model.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            else { return nil }
+            return .openAICompatible(baseURL: baseURL, model: model, apiKey: apiKey)
         }
     }
 

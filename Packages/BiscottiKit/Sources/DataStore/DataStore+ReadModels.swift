@@ -199,6 +199,10 @@ public struct AppSettingsData: Sendable, Equatable {
     /// User's custom meeting-summary instruction prompt. Empty means "use the
     /// built-in default" (so the shipped default can evolve for non-customizers).
     public var summaryPrompt: String
+    public var llmProviderRaw: String
+    public var openAIBaseURL: String
+    public var openAIModel: String
+    public var openAIAPIKey: String
     /// Master switch for custom vocabulary, as stored. `nil` means the user has
     /// never touched the toggle. Carried through unresolved so a full
     /// read-modify-write of settings (see `updateSettings`) cannot silently
@@ -236,6 +240,10 @@ public struct AppSettingsData: Sendable, Equatable {
         aiAnalysisEnabled: Bool = true,
         selectedModelID: String = "",
         summaryPrompt: String = "",
+        llmProviderRaw: String = "local",
+        openAIBaseURL: String = "http://127.0.0.1:8000/v1",
+        openAIModel: String = "",
+        openAIAPIKey: String = "",
         customVocabularyEnabled: Bool? = nil,
         calendarVocabularyEnabled: Bool = true,
         mcpServerEnabled: Bool = false
@@ -253,6 +261,10 @@ public struct AppSettingsData: Sendable, Equatable {
         self.aiAnalysisEnabled = aiAnalysisEnabled
         self.selectedModelID = selectedModelID
         self.summaryPrompt = summaryPrompt
+        self.llmProviderRaw = llmProviderRaw
+        self.openAIBaseURL = openAIBaseURL
+        self.openAIModel = openAIModel
+        self.openAIAPIKey = openAIAPIKey
         self.customVocabularyEnabled = customVocabularyEnabled
         self.calendarVocabularyEnabled = calendarVocabularyEnabled
         self.mcpServerEnabled = mcpServerEnabled
@@ -618,6 +630,10 @@ public extension DataStore {
                 aiAnalysisEnabled: existing.aiAnalysisEnabled,
                 selectedModelID: existing.selectedModelID,
                 summaryPrompt: existing.summaryPrompt,
+                llmProviderRaw: existing.llmProviderRaw,
+                openAIBaseURL: existing.openAIBaseURL,
+                openAIModel: existing.openAIModel,
+                openAIAPIKey: existing.openAIAPIKey,
                 customVocabularyEnabled: existing.customVocabularyEnabled,
                 calendarVocabularyEnabled: existing.calendarVocabularyEnabled,
                 mcpServerEnabled: existing.mcpServerEnabled
@@ -656,6 +672,10 @@ public extension DataStore {
             aiAnalysisEnabled: model.aiAnalysisEnabled,
             selectedModelID: model.selectedModelID,
             summaryPrompt: model.summaryPrompt,
+            llmProviderRaw: model.llmProviderRaw,
+            openAIBaseURL: model.openAIBaseURL,
+            openAIModel: model.openAIModel,
+            openAIAPIKey: model.openAIAPIKey,
             customVocabularyEnabled: model.customVocabularyEnabled,
             calendarVocabularyEnabled: model.calendarVocabularyEnabled,
             mcpServerEnabled: model.mcpServerEnabled
@@ -675,6 +695,10 @@ public extension DataStore {
         model.aiAnalysisEnabled = dto.aiAnalysisEnabled
         model.selectedModelID = dto.selectedModelID
         model.summaryPrompt = dto.summaryPrompt
+        model.llmProviderRaw = dto.llmProviderRaw
+        model.openAIBaseURL = dto.openAIBaseURL
+        model.openAIModel = dto.openAIModel
+        model.openAIAPIKey = dto.openAIAPIKey
         model.customVocabularyEnabled = dto.customVocabularyEnabled
         model.calendarVocabularyEnabled = dto.calendarVocabularyEnabled
         model.mcpServerEnabled = dto.mcpServerEnabled
